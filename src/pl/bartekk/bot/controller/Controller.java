@@ -33,6 +33,7 @@ import pl.bartekk.bot.util.MotorIndicator;
 public class Controller {
 
     //menu
+    public MenuItem closeItem;
     public MenuItem aboutItem;
 
     //control pane
@@ -91,10 +92,10 @@ public class Controller {
             if (!tempContent.equals(femFileContent)) {
                 femFileContent = tempContent;
                 //try {
-                    if (startButton.getText().equals(Labels.STOP)) {
-                        setSpeedValueToSliders(femFileContent);
-                        //link.sendCustomMessage(femFileContent);
-                    }/*
+                if (startButton.getText().equals(Labels.STOP)) {
+                    setSpeedValueToSliders(femFileContent);
+                    //link.sendCustomMessage(femFileContent);
+                }/*
                 } catch (IOException e) {
                     e.printStackTrace();
                 }*/
@@ -152,7 +153,7 @@ public class Controller {
         motor1SpeedSlider.setValue(motor2SpeedSlider.getValue());
     }
 
-    public void handleConnectButtonClick() {
+    public void handleConnectButtonClick() throws IOException {
         if (statusLabel.getText().equals(Labels.DISCONNECTED)) {
 
             connectionProgressIndicator.setVisible(true);
@@ -173,6 +174,8 @@ public class Controller {
             portId.setDisable(true);
             disableDashboard(false);
         } else if (statusLabel.getText().equals(Labels.CONNECTED)) {
+            stopRotating(MotorIndicator.BOTH);
+            sendToArduino("0,0;0");
             //link = null;
             connectionProgressIndicator.setVisible(false);
             statusLabel.setText(Labels.DISCONNECTED);
@@ -181,6 +184,12 @@ public class Controller {
             portId.setDisable(false);
             disableDashboard(true);
         }
+    }
+
+    private void sendToArduino(String input) {
+        System.out.println("TEST OK");
+//            link.sendCustomMessage(input);
+        System.out.println(input);
     }
 
     private void disableDashboard(boolean disable) {
@@ -229,6 +238,10 @@ public class Controller {
         alert.setHeaderText("StepperBot v1");
         alert.setContentText("2018 Bartosz Kłys, WIMiIP\n" + "Email: klys.bartosz@gmail.com");
         alert.show();
+    }
+
+    public void exitApplication() {
+        System.exit(0);
     }
 
     private void showConnectionErrorMessageDialog() {
@@ -288,14 +301,14 @@ public class Controller {
         }
     }
 
-    public void start() throws IOException {
+    public void start() {
         if (startButton.getText().equals("Start")) {
             if (collectivelyRadioButton.isSelected()) {
                 int firstMotorSpeed = Double.valueOf(speed1TestField.getText()).intValue();
                 String message = String.valueOf(firstMotorSpeed) + "," + firstMotorSpeed + ";" + Integer.valueOf(slowStartTextField.getText());
                 // FIXME: 31.07.2018 
                 System.out.println(message);
-                //link.sendCustomMessage(message.trim());
+                sendToArduino(message.trim());
                 motor2SpeedSlider.setValue(motor1SpeedSlider.getValue());
                 rotateImage();
 
@@ -305,10 +318,10 @@ public class Controller {
                 String message = firstMotorSpeed + "," + secondMotorSpeed + ";" + Integer.valueOf(slowStartTextField.getText());
                 // FIXME: 31.07.2018 
                 System.out.println(message);
-                link.sendCustomMessage(message.trim());
+                sendToArduino(message.trim());
                 rotateImage();
             } else if (femRadioButton.isSelected()) {
-                link.sendCustomMessage(getFemFileContent().trim());
+                sendToArduino(getFemFileContent().trim());
                 rotateImage();
             }
             startButton.setTextFill(Paint.valueOf("RED"));
@@ -317,8 +330,7 @@ public class Controller {
             disableControls(true);
         } else if (startButton.getText().equals("Stop")) {
             String stopMessage = "0,0;0";
-            System.out.println(stopMessage);
-            //link.sendCustomMessage(stopMessage.trim());
+            sendToArduino(stopMessage.trim());
             startButton.setTextFill(Paint.valueOf("GREEN"));
             startButton.setText(Labels.START);
             motorPane.setDisable(false);
