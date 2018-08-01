@@ -48,6 +48,9 @@ public class Controller {
     public TextField slowStartTextField;
     public Label slowStartModeLabel;
     public Button startButton;
+    public TextField spoolSizeTextField;
+    public Label spoolSizeLabel;
+    public Label spoolSizeCmLabel;
 
     //motor 1 pane
     public Pane motorPane;
@@ -67,7 +70,6 @@ public class Controller {
 
     //summary pane
     public Pane summaryPane;
-    public TextField spoolSizeTextField;
     public TextField summaryTextField;
     public Button resetButton;
     public ProgressIndicator connectionProgressIndicator;
@@ -309,8 +311,6 @@ public class Controller {
             if (collectivelyRadioButton.isSelected()) {
                 int firstMotorSpeed = Double.valueOf(speed1TestField.getText()).intValue();
                 String message = String.valueOf(firstMotorSpeed) + "," + firstMotorSpeed + ";" + Integer.valueOf(slowStartTextField.getText());
-                // FIXME: 31.07.2018 
-                System.out.println(message);
                 sendToArduino(message.trim());
                 motor2SpeedSlider.setValue(motor1SpeedSlider.getValue());
                 rotateImage();
@@ -319,17 +319,17 @@ public class Controller {
                 int firstMotorSpeed = Double.valueOf(speed1TestField.getText()).intValue();
                 int secondMotorSpeed = Double.valueOf(speed2TestField.getText()).intValue();
                 String message = firstMotorSpeed + "," + secondMotorSpeed + ";" + Integer.valueOf(slowStartTextField.getText());
-                // FIXME: 31.07.2018 
-                System.out.println(message);
                 sendToArduino(message.trim());
                 rotateImage();
             } else if (femRadioButton.isSelected()) {
                 sendToArduino(getFemFileContent().trim());
                 rotateImage();
             }
-            Runnable summary = () -> summaryTextField.setText(String.valueOf(System.currentTimeMillis()));
-            executor2 = Executors.newScheduledThreadPool(1);
-            executor2.scheduleAtFixedRate(summary, 0, 1, TimeUnit.SECONDS);
+            if (!spoolSizeTextField.getText().equals("")&& !spoolSizeTextField.getText().equals("0")) {
+                Runnable summary = () -> summaryTextField.setText(String.valueOf(System.currentTimeMillis()));
+                executor2 = Executors.newScheduledThreadPool(1);
+                executor2.scheduleAtFixedRate(summary, 0, 1, TimeUnit.SECONDS);
+            }
             startButton.setTextFill(Paint.valueOf("RED"));
             startButton.setText("Stop");
             motorPane.setDisable(true);
@@ -344,7 +344,9 @@ public class Controller {
             disableControls(false);
             connectButton.setDisable(false);
             setSpeedValueToSliders("0,0;0");
-            executor2.shutdown();
+            if (executor2 != null) {
+                executor2.shutdown();
+            }
         }
     }
 
@@ -372,6 +374,12 @@ public class Controller {
         femRadioButton.setOpacity(opacity);
         resetButton.setDisable(disabled);
         resetButton.setOpacity(opacity);
+        spoolSizeLabel.setDisable(disabled);
+        spoolSizeLabel.setOpacity(opacity);
+        spoolSizeTextField.setDisable(false);
+        spoolSizeTextField.setOpacity(opacity);
+        spoolSizeCmLabel.setDisable(disabled);
+        spoolSizeCmLabel.setOpacity(opacity);
     }
 
     public void selectSeparately() {
