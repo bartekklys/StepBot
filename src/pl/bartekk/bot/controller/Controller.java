@@ -67,7 +67,9 @@ public class Controller {
 
     //summary pane
     public Pane summaryPane;
-    public Label timeLabel;
+    public TextField spoolSizeTextField;
+    public TextField summaryTextField;
+    public Button resetButton;
     public ProgressIndicator connectionProgressIndicator;
 
     //connection pane
@@ -83,6 +85,7 @@ public class Controller {
     private RotateTransition rotateTransition1;
     private RotateTransition rotateTransition2;
     private ScheduledExecutorService executor;
+    private ScheduledExecutorService executor2;
     private File selectedFile;
     private String femFileContent;
 
@@ -94,7 +97,8 @@ public class Controller {
                 //try {
                 if (startButton.getText().equals(Labels.STOP)) {
                     setSpeedValueToSliders(femFileContent);
-                    //link.sendCustomMessage(femFileContent);
+                    rotateImage();
+                    sendToArduino(femFileContent);
                 }/*
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -176,7 +180,7 @@ public class Controller {
         } else if (statusLabel.getText().equals(Labels.CONNECTED)) {
             stopRotating(MotorIndicator.BOTH);
             sendToArduino("0,0;0");
-            //link = null;
+            link = null;
             connectionProgressIndicator.setVisible(false);
             statusLabel.setText(Labels.DISCONNECTED);
             connectButton.setText("Connect");
@@ -187,7 +191,6 @@ public class Controller {
     }
 
     private void sendToArduino(String input) {
-        System.out.println("TEST OK");
 //            link.sendCustomMessage(input);
         System.out.println(input);
     }
@@ -324,10 +327,14 @@ public class Controller {
                 sendToArduino(getFemFileContent().trim());
                 rotateImage();
             }
+            Runnable summary = () -> summaryTextField.setText(String.valueOf(System.currentTimeMillis()));
+            executor2 = Executors.newScheduledThreadPool(1);
+            executor2.scheduleAtFixedRate(summary, 0, 1, TimeUnit.SECONDS);
             startButton.setTextFill(Paint.valueOf("RED"));
             startButton.setText("Stop");
             motorPane.setDisable(true);
             disableControls(true);
+            connectButton.setDisable(true);
         } else if (startButton.getText().equals("Stop")) {
             String stopMessage = "0,0;0";
             sendToArduino(stopMessage.trim());
@@ -335,8 +342,14 @@ public class Controller {
             startButton.setText(Labels.START);
             motorPane.setDisable(false);
             disableControls(false);
-            stopRotating(MotorIndicator.BOTH);
+            connectButton.setDisable(false);
+            setSpeedValueToSliders("0,0;0");
+            executor2.shutdown();
         }
+    }
+
+    public void resetSummary() {
+        summaryTextField.setText("0");
     }
 
     private void disableControls(boolean disabled) {
@@ -357,6 +370,8 @@ public class Controller {
         collectivelyRadioButton.setOpacity(opacity);
         femRadioButton.setDisable(disabled);
         femRadioButton.setOpacity(opacity);
+        resetButton.setDisable(disabled);
+        resetButton.setOpacity(opacity);
     }
 
     public void selectSeparately() {

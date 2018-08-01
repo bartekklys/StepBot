@@ -13,6 +13,7 @@ public class Main extends Application {
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("stepper.fxml"));
         primaryStage.setTitle("StepperBot");
+        primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, 800, 600));
         primaryStage.getIcons().add(new Image("pl/bartekk/bot/images/icon.png"));
         primaryStage.show();
